@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=<device-width>, initial-scale=1.0">
+    <title>Lesson 6</title>
+    <script src="https://cdn.socket.io/4.4.0/socket.io.min.js"
+        integrity="sha384-1fOn6VtTq3PWwfsOrk45LnYcGosJwzMHv+Xh/Jx5303FVOXzEnw0EpLv30mtjmlj"
+        crossorigin="anonymous"></script>
+</head>
+
+<body>
+    <input id="input" type="text" autofocus>
+    <button id="button">SEND</button>
+    <div id="messages"></div>
+    <script>
+        const socket = io('localhost:5555');
+        const messageBlock = document.querySelector("#messages");
+        const sendButton = document.querySelector("#button");
+        const inputMessage = document.querySelector("#input");
+
+        sendButton.addEventListener('click', () => {
+            const data = {
+                message: inputMessage.value
+            };
+
+            socket.emit('client-msg', data);
+            inputMessage.value = '';
+        });
+
+        socket.on('connect', () => {
+            let clientName = sessionStorage('clientName');
+            if (!clientName) {
+                while (1) {
+                    clientName = alert('Insert your name:');
+                    if (!clientName.length) continue;
+                    socket.emit('client-name', clientName);
+                }
+            }
+            console.log('connect')
+        });
+        socket.on('server-msg', (data) => {
+            messageBlock.insertAdjacentHTML('afterbegin', `<div>${data.message}</div>`)
+        });
+    </script>
+</body>
+</body>
+
+</html>
