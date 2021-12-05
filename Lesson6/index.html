@@ -7,15 +7,25 @@
     <meta name="viewport" content="width=<device-width>, initial-scale=1.0">
     <title>Lesson 6</title>
     <script src="https://cdn.socket.io/4.4.0/socket.io.min.js"
-        integrity="sha384-1fOn6VtTq3PWwfsOrk45LnYcGosJwzMHv+Xh/Jx5303FVOXzEnw0EpLv30mtjmlj"
-        crossorigin="anonymous"></script>
+        integrity="sha384-1fOn6VtTq3PWwfsOrk45LnYcGosJwzMHv+Xh/Jx5303FVOXzEnw0EpLv30mtjmlj" crossorigin="anonymous">
+        </script>
+
 </head>
 
 <body>
+
     <input id="input" type="text" autofocus>
     <button id="button">SEND</button>
     <div id="messages"></div>
     <script>
+        const getNewName = (askString) => {
+            let newName = '';
+            do newName = prompt(askString);
+            while (!newName || !newName.length);
+            sessionStorage.setItem('clientName', newName);
+            return newName;
+        }
+
         const socket = io('localhost:5555');
         const messageBlock = document.querySelector("#messages");
         const sendButton = document.querySelector("#button");
@@ -30,19 +40,21 @@
             inputMessage.value = '';
         });
 
+        let clientName = '';
         socket.on('connect', () => {
-            let clientName = sessionStorage('clientName');
-            if (!clientName) {
-                while (1) {
-                    clientName = alert('Insert your name:');
-                    if (!clientName.length) continue;
-                    socket.emit('client-name', clientName);
-                }
-            }
-            console.log('connect')
+            clientName = sessionStorage.getItem('clientName');
+            if (!clientName) clientName = getNewName('Insert your name:');
+            socket.emit('client-name', clientName);
         });
+
+        socket.on('name-already-exist', () => {
+            clientName = getNewName(`The name ${clientName} is already in use. Enter an another name`);
+            socket.emit('client-name', clientName);
+        });
+
         socket.on('server-msg', (data) => {
-            messageBlock.insertAdjacentHTML('afterbegin', `<div>${data.message}</div>`)
+            messageBlock.insertAdjacentHTML('afterbegin',
+                `<div>${data.clientName}: <span>${data.message}</span></div>`)
         });
     </script>
 </body>
